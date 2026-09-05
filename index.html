@@ -108,12 +108,11 @@
     </div>
 </div>
 
-<!-- SDKs الخاصة بـ Firebase -->
+<!-- مكتبات Firebase v8 -->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-    // إعدادات Firebase الخاصة بمشروعك
     const firebaseConfig = {
       apiKey: "AIzaSyDKVunerGF2na7lc08PdOAtCk1CJ3NpS1A",
       authDomain: "mohamed-hossam-23d46.firebaseapp.com",
@@ -126,7 +125,10 @@
     };
 
     // تهيئة Firebase
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    
     const database = firebase.database();
     const messagesRef = database.ref('messages');
 
@@ -134,7 +136,7 @@
     const messageInput = document.getElementById('messageInput');
     const usernameInput = document.getElementById('username');
 
-    // إرسال الرسالة
+    // إرسال الرسالة مع معالجة الأخطاء
     function sendMessage() {
         const text = messageInput.value.trim();
         const user = usernameInput.value.trim() || 'مجهول';
@@ -144,12 +146,15 @@
                 username: user,
                 message: text,
                 timestamp: Date.now()
+            }).then(() => {
+                messageInput.value = '';
+            }).catch((error) => {
+                alert("خطأ في الإرسال: تأكد من تفعيل Rules في Firebase إلى true\n\n" + error.message);
             });
-            messageInput.value = '';
         }
     }
 
-    // استقبال الرسائل بشكل لحظي
+    // استقبال الرسائل
     messagesRef.on('child_added', (snapshot) => {
         const data = snapshot.val();
         const msgDiv = document.createElement('div');
@@ -162,6 +167,8 @@
         
         messagesDiv.appendChild(msgDiv);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }, (error) => {
+        console.error("خطأ قراءة البيانات:", error);
     });
 
     // إرسال بزر Enter

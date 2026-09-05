@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>واتساب بسيط</title>
+  <style>
+    * { box-sizing: border-box; font-family: sans-serif; margin: 0; padding: 0; }
+    body { background-color: #e5ddd5; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    .chat-container { width: 100%; max-width: 400px; height: 90vh; background: #fff; display: flex; flex-direction: column; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .header { background: #075e54; color: white; padding: 15px; text-align: center; font-weight: bold; }
+    .messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #efeae2; }
+    .msg { background: #fff; padding: 8px 12px; border-radius: 8px; max-width: 75%; font-size: 14px; width: fit-content; word-break: break-word; }
+    .msg .user { font-weight: bold; font-size: 11px; color: #075e54; display: block; margin-bottom: 3px; }
+    .input-area { display: flex; padding: 10px; background: #f0f0f0; gap: 5px; }
+    input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; outline: none; }
+    button { background: #128c7e; color: white; border: none; padding: 10px 15px; border-radius: 50%; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+<div class="chat-container">
+  <div class="header">مجموعة الواتساب التفاعلية</div>
+  <div class="messages" id="messages"></div>
+  <div class="input-area">
+    <input type="text" id="username" placeholder="اسمك..." style="max-width: 90px;">
+    <input type="text" id="messageInput" placeholder="اكتب رسالة...">
+    <button onclick="sendMessage()">➔</button>
+  </div>
+</div>
+
+<!-- مكتبات Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+<script>
+  // ضع بيانات مشروعك من Firebase هنا
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+
+  // إرسال الرسالة لقاعدة البيانات
+  function sendMessage() {
+    const user = document.getElementById('username').value.trim() || 'مجهول';
+    const input = document.getElementById('messageInput');
+    const text = input.value.trim();
+
+    if (text !== "") {
+      db.ref("chats").push({
+        user: user,
+        text: text,
+        timestamp: Date.now()
+      });
+      input.value = "";
+    }
+  }
+
+  // الاستماع اللحظي للرسائل الجديدة
+  db.ref("chats").on("child_added", (snapshot) => {
+    const data = snapshot.val();
+    const messagesDiv = document.getElementById('messages');
+    
+    const msgElement = document.createElement('div');
+    msgElement.className = 'msg';
+    msgElement.innerHTML = `<span class="user">${data.user}</span>${data.text}`;
+    
+    messagesDiv.appendChild(msgElement);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  });
+</script>
+
+</body>
+</html>
